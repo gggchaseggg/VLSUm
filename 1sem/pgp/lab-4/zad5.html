@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Задание 5</title>
+    <script src="mathbox-bundle.js"></script>
+    <link rel="stylesheet" href="mathbox.css" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1" />
+  </head>
+  <body>
+    <script>
+      var mathbox = mathBox({
+        plugins: ["core", "controls", "cursor", "mathbox"],
+        controls: { klass: THREE.OrbitControls },
+      });
+      if (mathbox.fallback) throw "WebGL �� �����ন������";
+      var three = mathbox.three;
+      three.renderer.setClearColor(new THREE.Color(0xffffff), 1.0);
+      var camera = mathbox.camera({ proxy: true, position: [0, 0, 3] });
+      var view = mathbox.cartesian({
+        range: [
+          [-3.6, -0.6],
+          [-2, 2],
+        ],
+        scale: [1, 1],
+      });
+      var xAxis = view.axis({ axis: 1, width: 8, detail: 40, color: "blue" });
+      var yAxis = view.axis({ axis: 2, width: 8, detail: 40, color: "green" });
+      var grid = view.grid({
+        width: 2,
+        divideX: 20,
+        divideY: 20,
+        opacity: 0.25,
+      });
+      var graphData = view.interval({
+        expr: function (emit, x, i, t) {
+          emit(x, 3 * Math.tan(0.6 * x * x + 3 * x + 9) - 4 * x - 5);
+        },
+        width: 256,
+        channels: 2,
+      });
+      var graphView = view.line({ width: 4, color: "red" });
+    </script>
+  </body>
+</html>

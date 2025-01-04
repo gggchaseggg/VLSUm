@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Лабораторная работа 2</title>
+    <script id="shader-fs" type="x-shader/x-fragment">
+      precision mediump float;
+      void main(void) { gl_FragColor = vec4(1, 1, 1, 1.0); }
+    </script>
+    <script id="shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      uniform mat4 uMVMatrix;
+      uniform mat4 uPMatrix;
+      void main(void) {
+      gl_PointSize = 5.0;
+      gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+      }
+    </script>
+  </head>
+  <body>
+    <script type="module" src="/main.js"></script>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <select id="selDrawType" style="margin: 20px">
+      <option>gl.POINTS</option>
+      <option>gl.LINES</option>
+      <option>gl.LINE_STRIP</option>
+      <option>gl.LINE_LOOP</option>
+      <option>gl.TRIANGLES</option>
+      <option>gl.TRIANGLE_STRIP</option>
+      <option>gl.TRIANGLE_FAN</option>
+    </select>
+
+    <h2>Задание:</h2>
+    <div style="display: flex; align-items: flex-start;">
+      <canvas id="canvas1" width="500" height="500"></canvas>
+      <select id="selDrawType1" style="margin: 20px">
+        <option>gl.POINTS</option>
+        <option>gl.LINES</option>
+        <option>gl.LINE_STRIP</option>
+        <option>gl.LINE_LOOP</option>
+        <option>gl.TRIANGLES</option>
+        <option>gl.TRIANGLE_STRIP</option>
+        <option>gl.TRIANGLE_FAN</option>
+      </select>
+    </div>
+  </body>
+</html>

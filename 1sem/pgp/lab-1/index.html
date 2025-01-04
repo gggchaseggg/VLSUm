@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PGP</title>
+  </head>
+  <body>
+    <div style="display: flex; gap: 10px">
+      <canvas id="canvas3D" width="400" height="300"
+        >Ваш браузер не поддерживает элемент canvas</canvas
+      >
+      <canvas id="canvas3D-1" width="400" height="300"
+        >Ваш браузер не поддерживает элемент canvas</canvas
+      >
+    </div>
+
+    <script type="module" src="/main.js"></script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+      void main(void) { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }
+    </script>
+    <!-- вершинный шейдер -->
+    <script id="shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      void main(void) { gl_Position = vec4(aVertexPosition, 1.0); }
+    </script>
+
+    <div style="display: flex; gap: 10px">
+      <div id="MyWebGLApp"></div>
+      <div id="MyWebGLApp-1"></div>
+    </div>
+  </body>
+</html>
