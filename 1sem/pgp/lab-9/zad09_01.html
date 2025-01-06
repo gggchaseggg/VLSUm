@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Лабораторная работа 9 - Вариант 6</title>
+    <script type="text/javascript" src="three.min_.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<script>
+    // Создание сцены, камеры и рендера
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Источник направленного освещения
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 10, 7);
+    scene.add(directionalLight);
+
+    // Создание осей координат и сетки
+    const axesHelper = new THREE.AxesHelper(5);
+    scene.add(axesHelper);
+    const gridHelper = new THREE.GridHelper(10, 10);
+    scene.add(gridHelper);
+
+    // Материал с блестящей поверхностью
+    const shinyMaterial = new THREE.MeshPhongMaterial({
+        color: 0x0077ff,
+        shininess: 100,
+        side: THREE.DoubleSide // Материал виден изнутри
+    });
+
+    // Создание эллипсоида
+    const ellipsoidGeometry = new THREE.SphereGeometry(1, 32, 16);
+    ellipsoidGeometry.scale(1, 1.5, 1); // Растяжение по оси Y
+    const ellipsoid = new THREE.Mesh(ellipsoidGeometry, shinyMaterial);
+    ellipsoid.position.set(-3, 0, 0);
+    scene.add(ellipsoid);
+
+    // Создание додекаэдра
+    const dodecahedronGeometry = new THREE.DodecahedronGeometry(1);
+    const dodecahedron = new THREE.Mesh(dodecahedronGeometry, shinyMaterial);
+    dodecahedron.position.set(0, 0, 0);
+    scene.add(dodecahedron);
+
+    // Создание скрученного тора
+    const torusKnotGeometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16, 2, 3);
+    const torusKnot = new THREE.Mesh(torusKnotGeometry, shinyMaterial);
+    torusKnot.position.set(4, 0, 0);
+    scene.add(torusKnot);
+
+    // Создание копии объекта
+    const torusKnotCopy = torusKnot.clone();
+    torusKnotCopy.position.set(4, 4, 0);
+    scene.add(torusKnotCopy);
+
+    // Добавление объектов друг к другу
+    const group = new THREE.Group();
+    group.add(ellipsoid);
+    group.add(dodecahedron);
+    group.add(torusKnot);
+    group.add(torusKnotCopy);
+    scene.add(group);
+
+    // Построение ограничивающей сферы
+    const boundingSphere = new THREE.Sphere();
+    torusKnotGeometry.computeBoundingSphere();
+    boundingSphere.copy(torusKnotGeometry.boundingSphere);
+    const sphereHelper = new THREE.Mesh(
+        new THREE.SphereGeometry(boundingSphere.radius, 32, 16),
+        new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+    );
+    sphereHelper.position.copy(boundingSphere.center);
+    scene.add(sphereHelper);
+
+    // Настройка камеры
+    camera.position.set(0, 5, 10);
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+</script>

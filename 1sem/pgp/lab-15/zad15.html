@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Лабораторная работа 15</title>
+    <script type="text/javascript" src="three.min_.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+        }
+        canvas {
+            display: block;
+        }
+        #info {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            pointer-events: none;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="info"></div>
+<script>
+
+    let scene, camera, renderer, raycaster, mouse, dodecahedron, ellipsoid, particleSystem;
+    let isDragging = false, offset, selectedObject = null;
+    const particles = [];
+
+    //  Инициализация сцены 
+    function init() {
+        scene = new THREE.Scene();
+        camera = createCamera();
+        renderer = createRenderer();
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+
+        addLighting();
+        createObjects();
+        createParticleSurface();
+        addEventListeners();
+        animate();
+    }
+
+    //  Создание камеры 
+    function createCamera() {
+        const cam = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        cam.position.z = 10;
+        return cam;
+    }
+
+    //  Создание рендера 
+    function createRenderer() {
+        const rend = new THREE.WebGLRenderer({ antialias: true });
+        rend.setSize(window.innerWidth, window.innerHeight);
+        rend.shadowMap.enabled = true;
+        rend.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(rend.domElement);
+        return rend;
+    }
+
+    //  Добавление освещения 
+    function addLighting() {
+        const pointLight = new THREE.PointLight(0xffffff, 2, 100);
+        pointLight.position.set(10, 10, 10);
+        pointLight.castShadow = true;
+        scene.add(pointLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 10, 5).normalize();
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+        scene.add(ambientLight);
+    }
+
+    //  Создание объектов 
+    function createObjects() {
+        const dodecahedronMaterial = new THREE.MeshStandardMaterial({
+            color: 0xff6347,
+            metalness: 0.5,
+            roughness: 0.5
+        });
+        const dodecahedronGeometry = new THREE.DodecahedronGeometry(2);
+        dodecahedron = new THREE.Mesh(dodecahedronGeometry, dodecahedronMaterial);
+        dodecahedron.position.set(-3, 0, 0);
+        dodecahedron.castShadow = true;
+        dodecahedron.receiveShadow = true;
+        scene.add(dodecahedron);
+
+        const ellipsoidMaterial = new THREE.MeshPhongMaterial({
+            color: 0x4682b4,
+            shininess: 100
+        });
+        const ellipsoidGeometry = new THREE.SphereGeometry(2, 32, 32);
+        ellipsoidGeometry.scale(1, 1.5, 1);
+        ellipsoid = new THREE.Mesh(ellipsoidGeometry, ellipsoidMaterial);
+        ellipsoid.position.set(3, 0, 0);
+        ellipsoid.castShadow = true;
+        ellipsoid.receiveShadow = true;
+        scene.add(ellipsoid);
+    }
+
+    //  Создание поверхности частиц 
+    function createParticleSurface() {
+        const particleCount = 1000;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount; i++) {
+            positions[i * 3] = Math.random() * 20 - 10; // X
+            positions[i * 3 + 1] = Math.random() * 20 - 10; // Y
+            positions[i * 3 + 2] = Math.random() * 20 - 10; // Z
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.2 });
+        particleSystem = new THREE.Points(geometry, material);
+        scene.add(particleSystem);
+    }
+
+    //  Обработчики событий 
+    function addEventListeners() {
+        window.addEventListener('mousedown', onMouseDown, false);
+        window.addEventListener('mousemove', onMouseMove, false);
+        window.addEventListener('mouseup', onMouseUp, false);
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    //  Обработчик изменения размера окна 
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    //  Функции для работы с мышью 
+
+    function getMousePosition(event) {
+        return new THREE.Vector2(
+            (event.clientX / window.innerWidth) * 2 - 1,
+            -(event.clientY / window.innerHeight) * 2 + 1
+        );
+    }
+
+    // Начало перетаскивания
+    function onMouseDown(event) {
+        mouse = getMousePosition(event);
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = getIntersects();
+
+        if (intersects.length > 0) {
+            const intersect = intersects[0];
+            if (event.button === 0) {
+                triggerExplosion(intersect.object);
+            }
+            isDragging = true;
+            offset = intersect.point.sub(intersect.object.position); // Смещение от центра объекта
+            selectedObject = intersect.object;
+            showObjectInfo(selectedObject, event.clientX, event.clientY);
+        }
+    }
+
+    // Перемещение объекта
+    function onMouseMove(event) {
+        if (isDragging) {
+            mouse = getMousePosition(event);
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(selectedObject, true);
+
+            if (intersects.length > 0) {
+                const intersect = intersects[0];
+                selectedObject.position.copy(intersect.point.sub(offset));
+            }
+        }
+    }
+
+    // Завершение перетаскивания
+    function onMouseUp() {
+        isDragging = false;
+    }
+
+    // Получение пересечений с объектами
+    function getIntersects() {
+        return raycaster.intersectObjects([dodecahedron, ellipsoid]);
+    }
+
+    //  Взрыв объекта 
+    function triggerExplosion(object) {
+        const particleCount = 100;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const velocities = [];
+
+        for (let i = 0; i < particleCount; i++) {
+            positions[i * 3] = object.position.x;
+            positions[i * 3 + 1] = object.position.y;
+            positions[i * 3 + 2] = object.position.z;
+            velocities.push(new THREE.Vector3(
+                (Math.random() - 0.5) * 10,
+                (Math.random() - 0.5) * 10,
+                (Math.random() - 0.5) * 10
+            ));
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({ color: object.material.color, size: 0.1 });
+        const explosionParticles = new THREE.Points(geometry, material);
+        scene.add(explosionParticles);
+
+        particles.push({ system: explosionParticles, velocities });
+        scene.remove(object);
+    }
+
+    //  Вывод информации об объекте 
+    function showObjectInfo(object, x, y) {
+        const infoDiv = document.getElementById('info');
+
+        let info = `Object: ${object.constructor.name}<br>`;
+        info += `Position: x: ${object.position.x.toFixed(2)}, y: ${object.position.y.toFixed(2)}, z: ${object.position.z.toFixed(2)}<br>`;
+        info += `Rotation: x: ${object.rotation.x.toFixed(2)}, y: ${object.rotation.y.toFixed(2)}, z: ${object.rotation.z.toFixed(2)}<br>`;
+        info += `Scale: x: ${object.scale.x.toFixed(2)}, y: ${object.scale.y.toFixed(2)}, z: ${object.scale.z.toFixed(2)}<br>`;
+
+        if (object.material) {
+            const material = object.material;
+            if (material.map) {
+                info += `Texture:${material.map.image.src}<br>`;
+            }
+            info += `Color: ${material.color.getStyle()}<br>`;
+        }
+
+        infoDiv.innerHTML = info;
+        infoDiv.style.left = `${x}px`;
+        infoDiv.style.top = `${y}px`;
+        infoDiv.style.display = 'block';
+    }
+
+    //  Анимация системы частиц 
+    function animateParticles() {
+        particles.forEach((particleData, index) => {
+            const { system, velocities } = particleData;
+            const positions = system.geometry.attributes.position.array;
+
+            velocities.forEach((velocity, i) => {
+                positions[i * 3] += velocity.x * 0.1; // X
+                positions[i * 3 + 1] += velocity.y * 0.1; // Y
+                positions[i * 3 + 2] += velocity.z * 0.1; // Z
+            });
+
+            system.geometry.attributes.position.needsUpdate = true;
+        });
+    }
+
+    //  Основной цикл анимации 
+    function animate() {
+        requestAnimationFrame(animate);
+
+        animateParticles();
+
+        renderer.render(scene, camera);
+    }
+
+    //  Скрытие информации об объекте 
+    window.addEventListener('click', () => {
+        const infoDiv = document.getElementById('info');
+        infoDiv.style.display = 'none';
+    });
+
+    // Инициализация сцены
+    init();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <title>Лабораторная работа 16</title>
+    <meta charset="utf-8">
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<script>
+    let scene, camera, renderer, controls, carousel;
+
+    function addLights() {
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Фоновый свет
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // Направленный свет
+        directionalLight.position.set(5, 5, 5);
+
+        scene.add(ambientLight);
+        scene.add(directionalLight);
+    }
+
+    function loadModel(url) {
+        const loader = new THREE.GLTFLoader();
+
+        loader.load(
+            url,
+            (gltf) => {
+                carousel = gltf.scene;
+                carousel.scale.set(1, 1, 1);
+                scene.add(carousel);
+            },
+            (progress) => {
+                console.log(`Загрузка модели: ${Math.round((progress.loaded / progress.total) * 100)}%`);
+            },
+            (error) => {
+                console.error('Ошибка загрузки модели:', error);
+            }
+        );
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        controls.update();
+        renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function init () {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        addLights();
+
+        loadModel('carousel.glb');
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.screenSpacePanning = false;
+        controls.maxPolarAngle = Math.PI / 2;
+
+        window.addEventListener('resize', onWindowResize);
+
+        animate();
+    };
+
+    init();
+</script>
+</body>
+</html>

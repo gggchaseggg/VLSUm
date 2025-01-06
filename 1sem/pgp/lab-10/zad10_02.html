@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Лабораторная работа 10</title>
+    <script type="text/javascript" src="three.min_.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<script>
+    // Загрузка текстур
+    const textureLoader = new THREE.TextureLoader();
+    const hairTexture = textureLoader.load('./hair.jpg');
+    const metallTexture = textureLoader.load('./metall.jpg');
+    const railTexture = textureLoader.load('./rail.jpg');
+
+    const hairMaterial = new THREE.MeshLambertMaterial({ map: hairTexture });
+    const metallMaterial = new THREE.MeshLambertMaterial({ map: metallTexture });
+    const railMaterial = new THREE.MeshLambertMaterial({ map: railTexture });
+
+    // Создание сцены, камеры и рендера
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Освещение
+    const light = new THREE.PointLight(0xffffff, 1, 100);
+    light.position.set(5, 5, 5);
+    scene.add(light);
+
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Мягкое общее освещение
+    scene.add(ambientLight);
+
+    // Сетка и оси координат
+    const gridHelper = new THREE.GridHelper(10, 10);
+    scene.add(gridHelper);
+
+    const axesHelper = new THREE.AxesHelper(5);
+    scene.add(axesHelper);
+
+    // Функция для создания точек кривой рельсов
+    function createRailCurve() {
+        const points = [];
+        for (let x = -4; x <= 4; x += 0.1) {
+            const y = Math.exp(-0.5 * (x / 2) ** 2); // Функция нормального распределения
+            points.push(new THREE.Vector2(x, y));
+        }
+        return points;
+    }
+
+    // Создание формы рельсов
+    const railShape = new THREE.Shape(createRailCurve());
+
+    // Создание рельсов с текстурой
+    const railGeometry = new THREE.ExtrudeGeometry(railShape, {
+        steps: 200, // Количество сегментов вдоль кривой
+        depth: 1, // Ширина рельсов
+        bevelEnabled: false, // Без фасок
+    });
+
+    const railMesh = new THREE.Mesh(railGeometry, railMaterial);
+    railMesh.position.y = -0.2;
+    railMesh.position.z = -0.5;
+    scene.add(railMesh);
+
+    // Создание тележки
+    const cartGeometry = new THREE.BoxGeometry(1, 0.5, 1);
+    const cart = new THREE.Mesh(cartGeometry, metallMaterial);
+    cart.position.set(-4, Math.exp(-0.5 * (-4 / 2) ** 2), 0); // Начальная позиция тележки
+    scene.add(cart);
+
+    // Добавление "пассажиров" (шариков) в тележку
+    const passengers = [];
+    const passengerPositions = [
+        [-0.3, 0.3, -0.2],
+        [0.3, 0.3, -0.2],
+        [-0.3, 0.3, 0.2],
+        [0.3, 0.3, 0.2],
+    ];
+
+    passengerPositions.forEach(([x, y, z]) => {
+        const sphereGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+        const passenger = new THREE.Mesh(sphereGeometry, hairMaterial);
+        passenger.position.set(x, y, z);
+        cart.add(passenger); // Добавляем шарики как дочерние объекты тележки
+        passengers.push(passenger);
+    });
+
+    // Настройка камеры
+    camera.position.set(0, 3, 5);
+    camera.lookAt(0, 0, 0);
+
+    // Анимация
+    let direction = 1; // Направление движения тележки
+    let currentX = -4;
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Перемещение тележки вдоль рельсов
+        currentX += 0.05 * direction;
+        if (currentX > 4 || currentX < -4) {
+            direction *= -1; // Смена направления
+        }
+
+        // Вычисление высоты тележки по нормальному распределению
+        const y = Math.exp(-0.5 * (currentX / 2) ** 2);
+        cart.position.set(currentX, y, 0);
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+</script>
+</body>
+</html>

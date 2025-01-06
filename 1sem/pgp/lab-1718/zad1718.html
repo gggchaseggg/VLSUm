@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <title>Лабораторная работа 1718</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden
+        }
+
+        canvas {
+            display: block
+        }
+
+        #balance-control-block {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+        }
+
+        #bcl, #bcr {
+            color: green;
+            font-size: 45px;
+            margin-inline: 12px;
+            font-weight: bold;
+            opacity: 0;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="balance-control-block">
+    <div id="bcl"> ></div>
+    <input disabled id="balance-control" max="50" min="-50" type="range" value="0">
+    <div id="bcr"> <</div>
+</div>
+<script>
+    let scene, camera, renderer, carousel, ball
+    let balance = 0, balanceOffset = 0
+    const balanceControl = document.getElementById('balance-control')
+    const bcl = document.getElementById('bcl')
+    const bcr = document.getElementById('bcr')
+
+    function addLights() {
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1)
+        directionalLight.position.set(5, 5, 5)
+
+        scene.add(ambientLight)
+        scene.add(directionalLight)
+    }
+
+    function loadModel(url) {
+        const loader = new THREE.GLTFLoader()
+
+        loader.load(
+            url,
+            (gltf) => {
+                carousel = gltf.scene
+                carousel.scale.set(1, 1, 1)
+                scene.add(carousel)
+
+                // Добавляем шар (человека) на карусель
+                const geometry = new THREE.SphereGeometry(0.5, 10, 10)
+                const textureLoader = new THREE.TextureLoader();
+                const texture = textureLoader.load('face.jpg'); // Замените на путь к вашей текстуре
+                const material = new THREE.MeshStandardMaterial({map: texture})
+                ball = new THREE.Mesh(geometry, material)
+                ball.position.set(1000000, 1.5, 1000000)
+                carousel.add(ball)
+            },
+            (progress) => {
+                console.log(`Загрузка модели: ${Math.round((progress.loaded / progress.total) * 100)}%`)
+            },
+            (error) => {
+                console.error('Ошибка загрузки модели:', error)
+            }
+        )
+    }
+
+    function animate() {
+        requestAnimationFrame(animate)
+
+        if (balance > 0) {
+            bcr.style.opacity = '1'
+            bcl.style.opacity = '0'
+        } else {
+            bcl.style.opacity = '1'
+            bcr.style.opacity = '0'
+        }
+
+        const coefficient = balanceOffset !== 0
+            ? 1
+            : balance < 10
+                ? 1
+                : balance / 10
+
+        // Вращение карусели
+        carousel.rotation.y += 0.03
+
+        // Балансировка значения
+        balance += ((balance > 0 ? 0.1 : -0.1) * coefficient) + balanceOffset
+        balance = Math.max(-50, Math.min(50, balance))
+        balanceControl.value = balance
+
+        // Перемещение шара в зависимости от значения
+        if (ball) {
+            const move = Math.abs(balance) / 50 * 2 + 1
+
+            ball.position.x = move
+            ball.position.z = move
+        }
+
+        // Проверка проигрыша
+        if (Math.abs(balance) >= 50) {
+            alert('Вы не удержались!')
+            balance = 0 // Сброс баланса
+        }
+
+        renderer.render(scene, camera)
+    }
+
+    function init() {
+        scene = new THREE.Scene()
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+        camera.position.set(0, 2, 5)
+        renderer = new THREE.WebGLRenderer({antialias: true})
+        renderer.setSize(window.innerWidth, window.innerHeight)
+        document.body.appendChild(renderer.domElement)
+
+        addLights()
+        loadModel('carousel.glb')
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth, window.innerHeight)
+        })
+
+        // Управление игрока
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') balanceOffset = -0.2
+            if (event.key === 'ArrowRight') balanceOffset = 0.2
+        })
+
+        window.addEventListener('keyup', (event) => {
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') balanceOffset = 0
+        })
+
+        animate()
+    }
+
+    init()
+</script>
+</body>
+</html>

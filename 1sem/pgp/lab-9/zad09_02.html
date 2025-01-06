@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Лабораторная работа 9 - Вариант 6</title>
+    <script type="text/javascript" src="three.min_.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<script>
+    // Создание сцены, камеры и рендера
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Освещение
+    const light = new THREE.PointLight(0xffffff, 1, 100);
+    light.position.set(5, 5, 5);
+    scene.add(light);
+
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Мягкое общее освещение
+    scene.add(ambientLight);
+
+    // Сетка и оси координат
+    const gridHelper = new THREE.GridHelper(10, 10);
+    scene.add(gridHelper);
+
+    const axesHelper = new THREE.AxesHelper(5);
+    scene.add(axesHelper);
+
+    // Функция для создания горки
+    function createRailPoints() {
+        const points = [];
+        for (let x = -4; x <= 4; x += 0.1) {
+            const y = Math.exp(-0.5 * (x / 2) ** 2); // Функция нормального распределения
+            points.push(new THREE.Vector3(x, y, 1)); // Левая рельса
+        }
+        return points;
+    }
+
+    // Создание "рельсов" с горкой
+    const railMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+    const railPoints1 = createRailPoints();
+    const railPoints2 = railPoints1.map((p) => new THREE.Vector3(p.x, p.y, -1)); // Правая рельса
+
+    const railGeometry1 = new THREE.BufferGeometry().setFromPoints(railPoints1);
+    const railGeometry2 = new THREE.BufferGeometry().setFromPoints(railPoints2);
+
+    const rail1 = new THREE.Line(railGeometry1, railMaterial);
+    const rail2 = new THREE.Line(railGeometry2, railMaterial);
+    scene.add(rail1, rail2);
+
+    // Создание тележки
+    const cartGeometry = new THREE.BoxGeometry(1, 0.5, 1);
+    const cartMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000, shininess: 100 });
+    const cart = new THREE.Mesh(cartGeometry, cartMaterial);
+    cart.position.set(-4, Math.exp(-0.5 * (-4 / 2) ** 2), 0); // Начальная позиция тележки
+    scene.add(cart);
+
+    // Добавление "пассажиров" (шариков) в тележку
+    const passengerMaterial = new THREE.MeshPhongMaterial({ color: 0xffff00, shininess: 50 });
+    const passengers = [];
+    const passengerPositions = [
+        [-0.3, 0.3, -0.2],
+        [0.3, 0.3, -0.2],
+        [-0.3, 0.3, 0.2],
+        [0.3, 0.3, 0.2],
+    ];
+
+    passengerPositions.forEach(([x, y, z]) => {
+        const sphereGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+        const passenger = new THREE.Mesh(sphereGeometry, passengerMaterial);
+        passenger.position.set(x, y, z);
+        cart.add(passenger); // Добавляем шарики как дочерние объекты тележки
+        passengers.push(passenger);
+    });
+
+    // Настройка камеры
+    camera.position.set(0, 2, 5);
+    camera.lookAt(0, 0, 0);
+
+    // Анимация
+    let direction = 1; // Направление движения тележки
+    let currentX = -4;
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Перемещение тележки вдоль рельсов
+        currentX += 0.05 * direction;
+        if (currentX > 4 || currentX < -4) {
+            direction *= -1; // Смена направления
+        }
+
+        // Вычисление высоты тележки по нормальному распределению
+        const y = Math.exp(-0.5 * (currentX / 2) ** 2);
+        cart.position.set(currentX, y, 0);
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+</script>
+
+
+

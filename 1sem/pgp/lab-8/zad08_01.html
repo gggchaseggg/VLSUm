@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Лабораторная работа 8 - Вариант 6</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas3D" width="800" height="600"></canvas>
+<script>
+
+    const vertices = [
+        0.0,  0.5, -0.5,   0.4755,  0.1545, -0.5,   0.2939, -0.4045, -0.5,
+        -0.2939, -0.4045, -0.5,  -0.4755,  0.1545, -0.5,   0.0,  0.5,  0.5,
+        0.4755,  0.1545,  0.5,   0.2939, -0.4045,  0.5,  -0.2939, -0.4045,  0.5,
+        -0.4755,  0.1545,  0.5
+    ];
+
+    const edges = [
+        0, 1, 1, 2, 2, 3, 3, 4, 4, 0, // нижняя грань
+        5, 6, 6, 7, 7, 8, 8, 9, 9, 5, // верхняя грань
+        0, 5, 1, 6, 2, 7, 3, 8, 4, 9  // рёбра соединяющие нижнюю и верхнюю грани
+    ];
+
+    const vertexShaderSource = `
+    attribute vec3 aVertexPosition;
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    void main(void) {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+    }
+`;
+
+    const fragmentShaderSource = `
+    precision mediump float;
+    uniform vec4 uColor;
+    void main(void) {
+        gl_FragColor = uColor;
+    }
+`;
+
+    const initGL = (canvas) => {
+        try {
+            const gl = canvas.getContext("experimental-webgl");
+
+            gl.viewportWidth = canvas.width;
+            gl.viewportHeight = canvas.height;
+
+            return gl
+        } catch (e) {
+            return null
+        }
+    };
+
+    const createShader = (gl, source, type) => {
+        const shader = gl.createShader(type);
+
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+
+        return shader;
+    };
+
+    const initShaders = (gl) => {
+        const vertexShader = createShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
+        const fragmentShader = createShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
+        const shaderProgram = gl.createProgram();
+
+        gl.attachShader(shaderProgram, vertexShader);
+        gl.attachShader(shaderProgram, fragmentShader);
+        gl.linkProgram(shaderProgram);
+        gl.useProgram(shaderProgram);
+
+        shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+        shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+        shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+        shaderProgram.colorUniform = gl.getUniformLocation(shaderProgram, "uColor");
+
+        return shaderProgram;
+    };
+
+    const setMatrixUniforms = (gl, shaderProgram, pMatrix, mvMatrix) => {
+        gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+        gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+    };
+
+    const initBuffers = (gl, vertices) => {
+        const buffer = gl.createBuffer();
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        buffer.itemSize = 3;
+
+        return buffer;
+    };
+
+    const drawShapes = (gl, shaderProgram, buffers, mvMatrix, pMatrix, colors) => {
+        buffers.forEach((buffer, index) => {
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
+            const edgesBuffer = gl.createBuffer();
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, edgesBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(edges), gl.STATIC_DRAW);
+            gl.uniform4fv(shaderProgram.colorUniform, colors[index]);
+            setMatrixUniforms(gl, shaderProgram, pMatrix, mvMatrix);
+            gl.drawElements(gl.LINES, edges.length, gl.UNSIGNED_SHORT, 0);
+        });
+    };
+
+    const setupWebGL = (gl, pMatrix, mvMatrix) => {
+        mat4.perspective(pMatrix, 1.04, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        mat4.identity(mvMatrix);
+        mat4.lookAt(mvMatrix, [0, 0, -5], [0, 0, 0], [0, 1, 0]);
+    };
+
+    const webGLStart = () => {
+        const canvas = document.getElementById("canvas3D");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const gl = initGL(canvas);
+        const shaderProgram = initShaders(gl);
+        const bufferOuter = initBuffers(gl, vertices);
+        const pMatrix = mat4.create();
+
+        const mvMatrix1 = mat4.create();
+        const mvMatrix2 = mat4.create();
+        const mvMatrix3 = mat4.create();
+        const mvMatrix4 = mat4.create();
+
+        setupWebGL(gl, pMatrix, mvMatrix1);
+
+        // Фигура 1: изначальная
+        mat4.translate(mvMatrix1, mvMatrix1, [0, 0, -2.0]);
+        mat4.rotate(mvMatrix1, mvMatrix1, Math.PI / 4, [1, -1, 0]);
+        drawShapes(gl, shaderProgram, [bufferOuter], mvMatrix1, pMatrix, [[1, 1, 1, 1]]);
+
+        // Фигура 2: масштабирование
+        mat4.copy(mvMatrix2, mvMatrix1);
+        mat4.scale(mvMatrix2, mvMatrix2, [1, 2.5, 1]);
+        drawShapes(gl, shaderProgram, [bufferOuter], mvMatrix2, pMatrix, [[0, 1, 0, 1]]);
+
+        // Фигура 3: масштабирование + поворот
+        mat4.copy(mvMatrix3, mvMatrix2);
+        mat4.rotate(mvMatrix3, mvMatrix3, -3 * Math.PI / 4, [0, 0, 1]);
+        drawShapes(gl, shaderProgram, [bufferOuter], mvMatrix3, pMatrix, [[1, 0, 0, 1]]);
+
+        // Фигура 4: масштабирование + поворот + перенос
+        mat4.copy(mvMatrix4, mvMatrix3);
+        mat4.translate(mvMatrix4, mvMatrix4, [-0.3, 0, 0]);
+        drawShapes(gl, shaderProgram, [bufferOuter], mvMatrix4, pMatrix, [[0, 0, 1, 1]]);
+    };
+
+    webGLStart();
+
+</script>
+</body>
+</html>

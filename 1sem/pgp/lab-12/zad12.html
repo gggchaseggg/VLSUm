@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Лабораторная работа 12</title>
+    <script type="text/javascript" src="three.min_.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<script>
+    // Создание сцены, камеры и рендера
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true; // Включение теней
+    document.body.appendChild(renderer.domElement);
+
+    // Источник направленного освещения
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 10, 7);
+    directionalLight.castShadow = true; // Источник света отбрасывает тени
+    scene.add(directionalLight);
+
+    // Создание осей координат и сетки
+    const axesHelper = new THREE.AxesHelper(5);
+    scene.add(axesHelper);
+    const gridHelper = new THREE.GridHelper(10, 10);
+    scene.add(gridHelper);
+
+    // Загрузка текстур
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load('hair.jpg'); // Замените на путь к вашей текстуре
+    const bumpMap = textureLoader.load('metall.jpg'); // Замените на путь к карте высот
+
+    // Материал с текстурой
+    const texturedMaterial = new THREE.MeshPhongMaterial({
+        map: texture,
+        bumpMap: bumpMap,
+        bumpScale: 0.2
+    });
+
+    // Материал с разными сторонами
+    const multiMaterial = new THREE.MeshFaceMaterial([
+        new THREE.MeshPhongMaterial({ color: 0xff0000 }),
+        new THREE.MeshPhongMaterial({ color: 0x00ff00 }),
+        new THREE.MeshPhongMaterial({ color: 0x0000ff })
+    ]);
+
+    // Создание эллипсоида с текстурой
+    const ellipsoidGeometry = new THREE.SphereGeometry(1, 32, 16);
+    ellipsoidGeometry.scale(1, 1.5, 1); // Растяжение по оси Y
+    const ellipsoid = new THREE.Mesh(ellipsoidGeometry, texturedMaterial);
+    ellipsoid.position.set(-3, 0, 0);
+    ellipsoid.castShadow = true;
+    ellipsoid.receiveShadow = true;
+    scene.add(ellipsoid);
+
+    // Создание додекаэдра с несколькими материалами
+    const dodecahedronGeometry = new THREE.DodecahedronGeometry(1);
+    const dodecahedron = new THREE.Mesh(dodecahedronGeometry, multiMaterial);
+    dodecahedron.position.set(0, 0, 0);
+    dodecahedron.castShadow = true;
+    dodecahedron.receiveShadow = true;
+    scene.add(dodecahedron);
+
+    // Создание скрученного тора с текстурой
+    const torusKnotGeometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16, 2, 3);
+    const torusKnot = new THREE.Mesh(torusKnotGeometry, texturedMaterial);
+    torusKnot.position.set(4, 0, 0);
+    torusKnot.castShadow = true;
+    torusKnot.receiveShadow = true;
+    scene.add(torusKnot);
+
+    // Добавление объектов друг к другу
+    const group = new THREE.Group();
+    group.add(ellipsoid);
+    group.add(dodecahedron);
+    group.add(torusKnot);
+    scene.add(group);
+
+    // Настройка камеры
+    camera.position.set(0, 5, 10);
+    camera.lookAt(0, 0, 0);
+
+    // Анимация
+    function animate() {
+        requestAnimationFrame(animate);
+        group.rotation.y += 0.01; // Вращение группы объектов
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+</script>
+</body>
+</html>
