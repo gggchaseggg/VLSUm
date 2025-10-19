@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE OnlineShop SYSTEM "shop.dtd">
+<?xml-stylesheet type="text/xsl" href="transform.xsl"?>
+<!-- Пример XML-документа для интернет-магазина -->
+<OnlineShop xmlns="http://www.example.com/online-shop"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.example.com/online-shop shop.xsd">
+            
+    <!-- Ссылка на общую сущность из DTD -->
+    <Title>&companyName; - Order System</Title>
+    
+    <Customers>
+        <Customer id="cust001">
+            <Name>Иван Петров</Name>
+            <Email>ivan.petrov@mail.ru</Email>
+            <Phone>
+                <CountryCode>+7</CountryCode>
+                <Number>9001234567</Number>
+            </Phone>
+            <Address>
+                <Country>Россия</Country>
+                <City>Москва</City>
+                <Street>ул. Тверская, 25</Street>
+                <ZipCode>125009</ZipCode>
+            </Address>
+            <RegistrationDate>2023-01-15</RegistrationDate>
+        </Customer>
+        
+        <Customer id="cust002">
+            <Name>Мария Сидорова</Name>
+            <Email>maria.s@yandex.ru</Email>
+            <Phone>
+                <CountryCode>+7</CountryCode>
+                <Number>9167654321</Number>
+            </Phone>
+            <Address>
+                <Country>Россия</Country>
+                <City>Санкт-Петербург</City>
+                <Street>Невский пр., 100</Street>
+                <ZipCode>191186</ZipCode>
+            </Address>
+            <RegistrationDate>2023-02-20</RegistrationDate>
+        </Customer>
+    </Customers>
+    
+    <Products>
+        <Product id="prod1001">
+            <Name>Смартфон Samsung Galaxy S23</Name>
+            <Category type="Electronics"/>
+            <Price>79999.99</Price>
+        </Product>
+        
+        <Product id="prod1002">
+            <Name>Научная фантастика: Сборник</Name>
+            <Category type="Books"/>
+            <Price>1250.50</Price>
+        </Product>
+        
+        <Product id="prod1003">
+            <Name>Зимняя куртка</Name>
+            <Category type="Clothing"/>
+            <Price>8999.00</Price>
+        </Product>
+    </Products>
+    
+    <Orders>
+        <Order id="order5001">
+            <OrderDate>2023-10-25</OrderDate>
+            <Status value="Shipped"/>
+            <CustomerRef customerId="cust001"/>
+            <ShipTo>
+                <Country>Россия</Country>
+                <City>Москва</City>
+                <Street>ул. Тверская, 25</Street>
+                <ZipCode>125009</ZipCode>
+            </ShipTo>
+            <Items>
+                <Item productId="prod1001" quantity="1" pricePerUnit="79999.99"/>
+                <Item productId="prod1002" quantity="2" pricePerUnit="1250.50"/>
+            </Items>
+            <PaymentMethod method="CreditCard"/>
+        </Order>
+        
+        <Order id="order5002">
+            <OrderDate>2023-10-26</OrderDate>
+            <Status value="Pending"/>
+            <CustomerRef customerId="cust002"/>
+            <ShipTo>
+                <Country>Россия</Country>
+                <City>Санкт-Петербург</City>
+                <Street>Невский пр., 100</Street>
+                <ZipCode>191186</ZipCode>
+            </ShipTo>
+            <Items>
+                <Item productId="prod1003" quantity="1" pricePerUnit="8999.00"/>
+            </Items>
+            <PaymentMethod method="PayPal"/>
+        </Order>
+    </Orders>
+    
+</OnlineShop>

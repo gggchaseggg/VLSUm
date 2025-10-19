@@ -1,0 +1,137 @@
+{
+  "$schema": "./schema.json",
+  "shopInfo": {
+    "name": "TechMarket Online",
+    "generationDate": "2024-01-15T14:30:45Z"
+  },
+  "customers": [
+    {
+      "id": "cust001",
+      "name": "Иван Петров",
+      "email": "ivan.petrov@mail.ru",
+      "registrationDate": "2023-01-15"
+    },
+    {
+      "id": "cust002",
+      "name": "Мария Сидорова",
+      "email": "maria.s@yandex.ru",
+      "registrationDate": "2023-02-20"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod1001",
+      "name": "Смартфон Samsung Galaxy S23",
+      "category": "Electronics",
+      "price": 79999.99
+    },
+    {
+      "id": "prod1002",
+      "name": "Научная фантастика: Сборник рассказов",
+      "category": "Books",
+      "price": 1250.50
+    },
+    {
+      "id": "prod1003",
+      "name": "Зимняя куртка утепленная",
+      "category": "Clothing",
+      "price": 8999.00
+    },
+    {
+      "id": "prod1004",
+      "name": "Кофемашина Delonghi",
+      "category": "Home",
+      "price": 34999.00
+    }
+  ],
+  "orders": [
+    {
+      "id": "order5001",
+      "orderDate": "2023-10-25",
+      "status": "Processing",
+      "customerId": "cust001",
+      "customerName": "Иван Петров",
+      "paymentMethod": "CreditCard",
+      "items": [
+        {
+          "productId": "prod1001",
+          "productName": "Смартфон Samsung Galaxy S23",
+          "pricePerUnit": 79999.99,
+          "quantity": 1,
+          "itemTotal": 79999.99
+        },
+        {
+          "productId": "prod1002",
+          "productName": "Научная фантастика: Сборник рассказов",
+          "pricePerUnit": 1250.50,
+          "quantity": 2,
+          "itemTotal": 2501.00
+        }
+      ],
+      "orderTotal": 82500.99
+    },
+    {
+      "id": "order5002",
+      "orderDate": "2023-10-26",
+      "status": "Pending",
+      "customerId": "cust002",
+      "customerName": "Мария Сидорова",
+      "paymentMethod": "PayPal",
+      "items": [
+        {
+          "productId": "prod1003",
+          "productName": "Зимняя куртка утепленная",
+          "pricePerUnit": 8999.00,
+          "quantity": 1,
+          "itemTotal": 8999.00
+        },
+        {
+          "productId": "prod1004",
+          "productName": "Кофемашина Delonghi",
+          "pricePerUnit": 34999.00,
+          "quantity": 1,
+          "itemTotal": 34999.00
+        }
+      ],
+      "orderTotal": 43998.00
+    },
+    {
+      "id": "order5003",
+      "orderDate": "2023-10-27",
+      "status": "Delivered",
+      "customerId": "cust001",
+      "customerName": "Иван Петров",
+      "paymentMethod": "CashOnDelivery",
+      "items": [
+        {
+          "productId": "prod1002",
+          "productName": "Научная фантастика: Сборник рассказов",
+          "pricePerUnit": 1250.50,
+          "quantity": 3,
+          "itemTotal": 3751.50
+        },
+        {
+          "productId": "prod1003",
+          "productName": "Зимняя куртка утепленная",
+          "pricePerUnit": 8999.00,
+          "quantity": 2,
+          "itemTotal": 17998.00
+        }
+      ],
+      "orderTotal": 21749.50
+    }
+  ],
+  "summary": {
+    "totalOrders": 3,
+    "totalRevenue": 148248.49,
+    "averageOrderValue": 49416.16,
+    "totalItemsSold": 9,
+    "ordersByStatus": {
+      "Pending": 1,
+      "Processing": 1,
+      "Shipped": 0,
+      "Delivered": 1,
+      "Cancelled": 0
+    }
+  }
+}

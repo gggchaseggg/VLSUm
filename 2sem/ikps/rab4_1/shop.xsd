@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.example.com/online-shop"
+           xmlns:os="http://www.example.com/online-shop"
+           elementFormDefault="qualified">
+
+    <!-- Простые типы с фацетами -->
+    <xs:simpleType name="EmailType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[^@]+@[^\.]+\..+"/>
+            <xs:minLength value="5"/>
+            <xs:maxLength value="100"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="PriceType">
+        <xs:restriction base="xs:decimal">
+            <xs:minInclusive value="0"/>
+            <xs:fractionDigits value="2"/>
+            <xs:totalDigits value="10"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Перечислимые типы -->
+    <xs:simpleType name="CategoryType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Electronics"/>
+            <xs:enumeration value="Books"/>
+            <xs:enumeration value="Clothing"/>
+            <xs:enumeration value="Home"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="OrderStatusType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Pending"/>
+            <xs:enumeration value="Shipped"/>
+            <xs:enumeration value="Delivered"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Комплексные типы -->
+    <xs:complexType name="AddressType">
+        <xs:sequence>
+            <xs:element name="Country" type="xs:string"/>
+            <xs:element name="City" type="xs:string"/>
+            <xs:element name="Street" type="xs:string"/>
+            <xs:element name="ZipCode" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="PhoneType">
+        <xs:sequence>
+            <xs:element name="CountryCode" type="xs:string"/>
+            <xs:element name="Number" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="OrderItemType">
+        <xs:attribute name="productId" type="xs:IDREF" use="required"/>
+        <xs:attribute name="quantity" type="xs:positiveInteger" use="required"/>
+        <xs:attribute name="pricePerUnit" type="PriceType" use="required"/>
+    </xs:complexType>
+
+    <!-- Абстрактный базовый тип -->
+    <xs:complexType name="BaseEntityType" abstract="true">
+        <xs:attribute name="id" type="xs:ID" use="required"/>
+    </xs:complexType>
+
+    <!-- Наследование расширением -->
+    <xs:complexType name="ProductType">
+        <xs:complexContent>
+            <xs:extension base="os:BaseEntityType">
+                <xs:sequence>
+                    <xs:element name="Name" type="xs:string"/>
+                    <xs:element name="Category">
+                        <xs:simpleType>
+                            <xs:restriction base="os:CategoryType"/>
+                        </xs:simpleType>
+                    </xs:element>
+                    <xs:element name="Price" type="os:PriceType"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- Модельные группы: sequence и choice -->
+    <xs:complexType name="CustomerType">
+        <xs:complexContent>
+            <xs:extension base="os:BaseEntityType">
+                <xs:sequence>
+                    <xs:element name="Name" type="xs:string"/>
+                    <xs:element name="Email" type="os:EmailType"/>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:element name="Phone" type="os:PhoneType"/>
+                    </xs:choice>
+                    <xs:element name="Address" type="os:AddressType"/>
+                    <xs:element name="RegistrationDate" type="xs:date"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="OrderType">
+        <xs:complexContent>
+            <xs:extension base="os:BaseEntityType">
+                <xs:sequence>
+                    <xs:element name="OrderDate" type="xs:date"/>
+                    <xs:element name="Status" type="os:OrderStatusType"/>
+                    <xs:element name="CustomerRef">
+                        <xs:complexType>
+                            <xs:attribute name="customerId" type="xs:IDREF" use="required"/>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="ShipTo" type="os:AddressType"/>
+                    <xs:element name="Items">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="Item" type="os:OrderItemType" maxOccurs="unbounded"/>
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="PaymentMethod" type="os:PaymentMethodType"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- Корневые элементы -->
+    <xs:element name="OnlineShop">
+        <xs:complexType>
+            <xs:all>
+                <xs:element name="Customers" type="os:CustomersType"/>
+                <xs:element name="Products" type="os:ProductsType"/>
+                <xs:element name="Orders" type="os:OrdersType"/>
+            </xs:all>
+        </xs:complexType>
+        
+        <!-- Ограничения ключей -->
+        <xs:key name="CustomerKey">
+            <xs:selector xpath="os:Customers/os:Customer"/>
+            <xs:field xpath="@id"/>
+        </xs:key>
+        
+        <xs:key name="ProductKey">
+            <xs:selector xpath="os:Products/os:Product"/>
+            <xs:field xpath="@id"/>
+        </xs:key>
+        
+        <xs:keyref name="CustomerRefKey" refer="os:CustomerKey">
+            <xs:selector xpath="os:Orders/os:Order/os:CustomerRef"/>
+            <xs:field xpath="@customerId"/>
+        </xs:keyref>
+    </xs:element>
+
+    <xs:complexType name="CustomersType">
+        <xs:sequence>
+            <xs:element name="Customer" type="os:CustomerType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ProductsType">
+        <xs:sequence>
+            <xs:element name="Product" type="os:ProductType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="OrdersType">
+        <xs:sequence>
+            <xs:element name="Order" type="os:OrderType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

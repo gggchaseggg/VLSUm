@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Лабораторная работа 1. DTD для интернет-магазина -->
+
+<!-- Общие сущности -->
+<!ENTITY % statuses "(Pending | Shipped | Delivered)">
+<!ENTITY % categories "(Electronics | Books | Clothing | Home)">
+<!ENTITY % paymentMethods "(CreditCard | PayPal | CashOnDelivery)">
+
+<!-- Параметрическая сущность для общих атрибутов -->
+<!ENTITY % common-attributes "
+    id ID #REQUIRED
+">
+
+<!-- Описание элементов -->
+<!ELEMENT OnlineShop (Customers, Products, Orders)>
+<!ELEMENT Customers (Customer+)>
+<!ELEMENT Products (Product+)>
+<!ELEMENT Orders (Order+)>
+
+<!ELEMENT Customer (Name, Email, Phone, Address, RegistrationDate)>
+<!ATTLIST Customer %common-attributes;>
+
+<!ELEMENT Product (Name, Category, Price)>
+<!ATTLIST Product %common-attributes;>
+
+<!ELEMENT Order (OrderDate, Status, CustomerRef, ShipTo, Items, PaymentMethod)>
+<!ATTLIST Order %common-attributes;>
+
+<!-- Комплексные типы -->
+<!ELEMENT Name (#PCDATA)>
+<!ELEMENT Email (#PCDATA)>
+<!ELEMENT OrderDate (#PCDATA)>
+<!ELEMENT Price (#PCDATA)>
+
+<!ELEMENT Phone (CountryCode, Number)>
+<!ELEMENT CountryCode (#PCDATA)>
+<!ELEMENT Number (#PCDATA)>
+
+<!ELEMENT Address (Country, City, Street, ZipCode)>
+<!ELEMENT Country (#PCDATA)>
+<!ELEMENT City (#PCDATA)>
+<!ELEMENT Street (#PCDATA)>
+<!ELEMENT ZipCode (#PCDATA)>
+
+<!ELEMENT Items (Item+)>
+<!ELEMENT Item EMPTY>
+<!ATTLIST Item
+    productId IDREF #REQUIRED
+    quantity CDATA #REQUIRED
+    pricePerUnit CDATA #REQUIRED
+>
+
+<!ELEMENT CustomerRef EMPTY>
+<!ATTLIST CustomerRef
+    customerId IDREF #REQUIRED
+>
+
+<!ELEMENT Status (#PCDATA)>
+<!ATTLIST Status
+    value %statuses; "Pending"
+>
+
+<!ELEMENT Category (#PCDATA)>
+<!ATTLIST Category
+    type %categories; #REQUIRED
+>
+
+<!ELEMENT PaymentMethod (#PCDATA)>
+<!ATTLIST PaymentMethod
+    method %paymentMethods; #REQUIRED
+>
+
+<!ELEMENT RegistrationDate (#PCDATA)>
+
+<!-- Внешняя неанализируемая сущность -->
+<!ENTITY license SYSTEM "license.txt" NDATA txt>
+<!NOTATION txt PUBLIC "text/plain">
+
+<!-- Ссылка на общую сущность в документе -->
+<!ENTITY companyName "BestOnlineShop">

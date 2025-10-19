@@ -1,0 +1,207 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/online-shop-schema.json",
+  "title": "Online Shop Data Schema",
+  "description": "Схема данных интернет-магазина для лабораторной работы",
+  "type": "object",
+  "properties": {
+    "shopInfo": {
+      "type": "object",
+      "description": "Информация о магазине",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Название магазина"
+        },
+        "generationDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Дата и время генерации отчета"
+        }
+      },
+      "required": ["name", "generationDate"]
+    },
+    "customers": {
+      "type": "array",
+      "description": "Список клиентов",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Уникальный идентификатор клиента"
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя клиента",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email адрес клиента"
+          },
+          "registrationDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Дата регистрации клиента"
+          }
+        },
+        "required": ["id", "name", "email", "registrationDate"]
+      }
+    },
+    "products": {
+      "type": "array",
+      "description": "Список товаров",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Уникальный идентификатор товара"
+          },
+          "name": {
+            "type": "string",
+            "description": "Название товара",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "category": {
+            "type": "string",
+            "enum": ["Electronics", "Books", "Clothing", "Home"],
+            "description": "Категория товара"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": 0,
+            "description": "Цена товара",
+            "multipleOf": 0.01
+          }
+        },
+        "required": ["id", "name", "category", "price"]
+      }
+    },
+    "orders": {
+      "type": "array",
+      "description": "Список заказов (табличная часть)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Уникальный идентификатор заказа"
+          },
+          "orderDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Дата заказа"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+            "description": "Статус заказа"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "ID клиента"
+          },
+          "customerName": {
+            "type": "string",
+            "description": "Имя клиента"
+          },
+          "items": {
+            "type": "array",
+            "description": "Товары в заказе",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "description": "ID товара"
+                },
+                "productName": {
+                  "type": "string",
+                  "description": "Название товара"
+                },
+                "pricePerUnit": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Цена за единицу",
+                  "multipleOf": 0.01
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Количество"
+                },
+                "itemTotal": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Общая стоимость (вычисляемое поле: pricePerUnit * quantity)",
+                  "multipleOf": 0.01
+                }
+              },
+              "required": ["productId", "productName", "pricePerUnit", "quantity", "itemTotal"]
+            }
+          },
+          "orderTotal": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Общая сумма заказа (вычисляемое поле)",
+            "multipleOf": 0.01
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": ["CreditCard", "PayPal", "CashOnDelivery"],
+            "description": "Способ оплаты"
+          }
+        },
+        "required": ["id", "orderDate", "status", "customerId", "customerName", "items", "orderTotal", "paymentMethod"]
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Итоговая информация (агрегация)",
+      "properties": {
+        "totalOrders": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Общее количество заказов"
+        },
+        "totalRevenue": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Общая выручка (итог по всем заказам)",
+          "multipleOf": 0.01
+        },
+        "averageOrderValue": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Средний чек",
+          "multipleOf": 0.01
+        },
+        "totalItemsSold": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Общее количество проданных товаров"
+        },
+        "ordersByStatus": {
+          "type": "object",
+          "description": "Количество заказов по статусам",
+          "properties": {
+            "Pending": {"type": "integer", "minimum": 0},
+            "Processing": {"type": "integer", "minimum": 0},
+            "Shipped": {"type": "integer", "minimum": 0},
+            "Delivered": {"type": "integer", "minimum": 0},
+            "Cancelled": {"type": "integer", "minimum": 0}
+          }
+        }
+      },
+      "required": ["totalOrders", "totalRevenue", "averageOrderValue", "totalItemsSold", "ordersByStatus"]
+    }
+  },
+  "required": ["shopInfo", "orders", "summary"],
+  "additionalProperties": false
+}
